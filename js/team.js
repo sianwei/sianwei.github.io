@@ -24,8 +24,7 @@ function createTeamInput(num) {
         attrSelect.className = 'team-attr-select';
         allAttrs.forEach(attr => {
             const opt = document.createElement('option');
-            opt.value = attr;
-            opt.textContent = attr;
+            opt.value = attr; opt.textContent = attr;
             attrSelect.appendChild(opt);
         });
 
@@ -65,8 +64,7 @@ function createEditTeamInput(num) {
         attrSelect.className = 'team-attr-select';
         allAttrs.forEach(attr => {
             const opt = document.createElement('option');
-            opt.value = attr;
-            opt.textContent = attr;
+            opt.value = attr; opt.textContent = attr;
             attrSelect.appendChild(opt);
         });
 
@@ -82,18 +80,16 @@ function createEditTeamInput(num) {
     }
 }
 
-// ========== 隊伍管理：智能模糊匹配 (Firebase完整版) ==========
+// ========== 隊伍管理：智能模糊匹配 (纯Firebase) ==========
 async function searchCharacter(inputObj, idx, type='add') {
+    if (!checkFirebaseReady()) return;
     const keyword = inputObj.value.trim();
     const suggestId = type == 'edit' ? `editSuggest${idx}` : `suggest${idx}`;
     const suggestBox = document.getElementById(suggestId);
     suggestBox.innerHTML = "";
-    if(keyword.length === 0){
-        suggestBox.style.display = 'none';
-        return;
-    }
+    if(keyword.length === 0){ suggestBox.style.display = 'none'; return; }
+
     try{
-        if(!window.charRef) return;
         const snapshot = await window.charRef.once('value');
         const charsObj = snapshot.val() || {};
         const chars = Object.values(charsObj);
@@ -108,10 +104,7 @@ async function searchCharacter(inputObj, idx, type='add') {
             const item = document.createElement('div');
             item.className = 'suggest-item';
             item.innerHTML = `${index+1}: ${name}`;
-            item.onclick = function(){
-                inputObj.value = name;
-                suggestBox.style.display = 'none';
-            }
+            item.onclick = function(){ inputObj.value = name; suggestBox.style.display = 'none'; };
             suggestBox.appendChild(item);
         });
         suggestBox.style.display = 'block';
@@ -121,15 +114,14 @@ async function searchCharacter(inputObj, idx, type='add') {
     }
 }
 
-// ========== 隊伍管理：新增隊伍 (Firebase完整版，无LeanCloud代码) ==========
+// ========== 隊伍管理：新增隊伍 (纯Firebase，无旧代码) ==========
 async function addTeam() {
+    if (!checkFirebaseReady()) return;
     const teamNum = document.getElementById('teamNum').value;
     const teamName = document.getElementById('teamName').value.trim();
     const teamDesc = document.getElementById('teamDesc').value.trim();
     const teamMsg = document.getElementById('teamMsg');
-    let teamChars = [];
-    let charCodes = [];
-    let isEmpty = false;
+    let teamChars = []; let charCodes = []; let isEmpty = false;
 
     if(teamNum == 0){ teamMsg.textContent = "⚠️ 請先選擇隊伍角色數量！"; teamMsg.className = "warn"; return; }
     if(!teamName){ teamMsg.textContent = "⚠️ 隊伍名稱為必填！"; teamMsg.className = "warn"; return; }
@@ -139,9 +131,7 @@ async function addTeam() {
         const attrVal = document.getElementById(`teamAttr${i}`).value;
         if(!charVal){ 
             teamMsg.textContent = `⚠️ 第 ${i} 位角色名稱不可為空！`; 
-            teamMsg.className = "warn"; 
-            isEmpty = true; 
-            break; 
+            teamMsg.className = "warn"; isEmpty = true; break; 
         }
         teamChars.push(`${charVal}【${attrVal}】`);
         charCodes.push(generateCharCode(charVal, attrVal));
@@ -152,42 +142,33 @@ async function addTeam() {
         const teamCode = generateTeamCode(teamNum, charCodes);
         if(await checkCodeIsExist(teamCode, 'team')){
             teamMsg.textContent = `⚠️ 重複登記！該隊伍組合已存在！`;
-            teamMsg.className = "warn";
-            return;
+            teamMsg.className = "warn"; return;
         }
         const teamScene = teamNum ==3 ? "工會戰/占領戰" : (teamNum ==4 ? "競技場" : "RTA/副本");
         const teamId = getUUID();
         await window.teamRef.child(teamId).set({
-            id: teamId,
-            teamName: teamName,
-            teamNum: teamNum,
-            teamScene: teamScene,
-            teamChars: teamChars,
-            teamDesc: teamDesc || "暫無隊伍備註",
-            teamCode: teamCode
+            id: teamId, teamName: teamName, teamNum: teamNum, teamScene: teamScene,
+            teamChars: teamChars, teamDesc: teamDesc || "暫無隊伍備註", teamCode: teamCode
         });
-
         teamMsg.textContent = "✅ 隊伍登記成功！";
         teamMsg.className = "success";
+        // 重置表单
         document.getElementById('teamNum').value = 0;
         document.getElementById('teamName').value = "";
         document.getElementById('teamDesc').value = "";
         document.getElementById('teamInputContainer').innerHTML = "";
     }catch(err){
-        teamMsg.textContent = "⚠️ 新增失敗："+err.message;
+        teamMsg.textContent = "⚠️ 新增失敗："+ err.message;
         teamMsg.className = "warn";
     }
 }
 
-// ========== 隊伍管理：查詢所有隊伍 (Firebase完整版) ==========
+// ========== 隊伍管理：查詢所有隊伍 (纯Firebase) ==========
 async function showAllTeams() {
+    if (!checkFirebaseReady()) return;
     const listBox = document.getElementById('teamList');
     listBox.innerHTML = "<div class='empty-tip'>加載中...</div>";
     try{
-        if(!window.teamRef) {
-            listBox.innerHTML = "<div class='empty-tip'>數據庫加載中，請刷新頁面再試！</div>";
-            return;
-        }
         const snapshot = await window.teamRef.once('value');
         const teamsObj = snapshot.val() || {};
         const teams = Object.values(teamsObj);
@@ -222,19 +203,14 @@ async function showAllTeams() {
     }
 }
 
-// ========== 隊伍管理：打開修改彈窗 (Firebase完整版) ==========
+// ========== 隊伍管理：打開修改彈窗 (纯Firebase) ==========
 async function editTeam(teamId) {
+    if (!checkFirebaseReady()) return;
     try{
-        if(!window.teamRef) {
-            alert("數據庫加載中，請稍等！");
-            return;
-        }
         const snapshot = await window.teamRef.child(teamId).once('value');
         const teamData = snapshot.val();
-        if(!teamData) {
-            alert("隊伍數據不存在！");
-            return;
-        }
+        if(!teamData) { alert("隊伍數據不存在！"); return; }
+        
         document.getElementById('editTeamId').value = teamId;
         document.getElementById('editTeamNum').value = teamData.teamNum;
         document.getElementById('editTeamCode').value = teamData.teamCode;
@@ -253,30 +229,25 @@ async function editTeam(teamId) {
         });
         document.getElementById('editTeamModal').style.display = "flex";
     }catch(err){
-        alert("加載隊伍失敗："+err.message);
+        alert("加載隊伍失敗："+ err.message);
     }
 }
 
-// ========== 隊伍管理：保存隊伍修改 (Firebase完整版) ==========
+// ========== 隊伍管理：保存隊伍修改 (纯Firebase) ==========
 async function saveTeamEdit() {
+    if (!checkFirebaseReady()) return;
     const teamId = document.getElementById('editTeamId').value;
     const oldTeamCode = document.getElementById('editTeamCode').value;
     const editTeamNum = document.getElementById('editTeamNum').value;
     const editTeamName = document.getElementById('editTeamName').value.trim();
     const editTeamDesc = document.getElementById('editTeamDesc').value.trim();
-    let editTeamChars = [];
-    let charCodes = [];
-    let isEmpty = false;
+    let editTeamChars = []; let charCodes = []; let isEmpty = false;
 
     if(!editTeamName){ alert("⚠️ 隊伍名稱為必填！"); return; }
     for(let i=1; i<=editTeamNum; i++){
         const charVal = document.getElementById(`editTeamChar${i}`).value.trim();
         const attrVal = document.getElementById(`editTeamAttr${i}`).value;
-        if(!charVal){ 
-            alert(`⚠️ 第 ${i} 位角色名稱不可為空！`);
-            isEmpty = true; 
-            break; 
-        }
+        if(!charVal){ alert(`⚠️ 第 ${i} 位角色名稱不可為空！`); isEmpty = true; break; }
         editTeamChars.push(`${charVal}【${attrVal}】`);
         charCodes.push(generateCharCode(charVal, attrVal));
     }
@@ -285,35 +256,33 @@ async function saveTeamEdit() {
     try{
         const newTeamCode = generateTeamCode(editTeamNum, charCodes);
         if(newTeamCode !== oldTeamCode && await checkCodeIsExist(newTeamCode, 'team')){
-            alert(`⚠️ 重複修改！修改後的隊伍組合已存在！`);
-            return;
+            alert(`⚠️ 重複修改！修改後的隊伍組合已存在！`); return;
         }
         await window.teamRef.child(teamId).update({
-            teamName: editTeamName,
-            teamChars: editTeamChars,
-            teamDesc: editTeamDesc || "暫無隊伍備註",
-            teamCode: newTeamCode
+            teamName: editTeamName, teamChars: editTeamChars,
+            teamDesc: editTeamDesc || "暫無隊伍備註", teamCode: newTeamCode
         });
         closeTeamModal();
         showAllTeams();
         alert("✅ 隊伍修改成功！");
     }catch(err){
-        alert("修改失敗："+err.message);
+        alert("修改失敗："+ err.message);
     }
 }
 
-// ========== 隊伍管理：關閉修改彈窗 (不变) ==========
+// ========== 關閉修改彈窗 (不变) ==========
 function closeTeamModal() { 
     document.getElementById('editTeamModal').style.display = "none"; 
 }
 
-// ========== 隊伍管理：刪除隊伍 (Firebase完整版) ==========
+// ========== 刪除隊伍 (纯Firebase) ==========
 async function delTeam(teamId) {
+    if (!checkFirebaseReady()) return;
     if(!confirm("⚠️ 確定要刪除這個隊伍嗎？刪除後無法復原！")) return;
     try{
         await window.teamRef.child(teamId).remove();
         showAllTeams();
     }catch(err){
-        alert("刪除失敗："+err.message);
+        alert("刪除失敗："+ err.message);
     }
 }
