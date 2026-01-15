@@ -1,4 +1,4 @@
-// ========== 角色管理：新增角色 ==========
+// ========== 角色管理：新增角色 (Firebase完整版，无任何LeanCloud代码) ==========
 async function addCharacter() {
     const charName = document.getElementById('charName').value.trim();
     const charAttr = document.getElementById('charAttr').value;
@@ -9,8 +9,8 @@ async function addCharacter() {
         msg.className = "warn";
         return;
     }
-
     msg.textContent = "";
+
     try{
         if(charAttr === "全部"){
             for(let attr of allAttrs){
@@ -20,13 +20,16 @@ async function addCharacter() {
                     msg.className = "warn";
                     return;
                 }
-                const char = new CharacterTable();
-                char.set('name', charName);
-                char.set('attr', attr);
-                char.set('desc', charDesc || "暫無備註");
-                char.set('charCode', charCode);
-                char.set('charImg', currentAddImgBase64 || '');
-                await char.save();
+                // Firebase新增数据
+                const charId = getUUID();
+                await window.charRef.child(charId).set({
+                    id: charId,
+                    name: charName,
+                    attr: attr,
+                    desc: charDesc || "暫無備註",
+                    charCode: charCode,
+                    charImg: currentAddImgBase64 || ''
+                });
             }
             msg.textContent = "✅ 新增成功！已添加5個屬性版本";
         } else {
@@ -36,16 +39,19 @@ async function addCharacter() {
                 msg.className = "warn";
                 return;
             }
-            const char = new CharacterTable();
-            char.set('name', charName);
-            char.set('attr', charAttr);
-            char.set('desc', charDesc || "暫無備註");
-            char.set('charCode', charCode);
-            char.set('charImg', currentAddImgBase64 || '');
-            await char.save();
+            // Firebase新增数据
+            const charId = getUUID();
+            await window.charRef.child(charId).set({
+                id: charId,
+                name: charName,
+                attr: charAttr,
+                desc: charDesc || "暫無備註",
+                charCode: charCode,
+                charImg: currentAddImgBase64 || ''
+            });
             msg.textContent = "✅ 新增角色成功！";
         }
-        // 重置表單
+        // 重置表单
         document.getElementById('charName').value = "";
         document.getElementById('charDesc').value = "";
         currentAddImgBase64 = '';
@@ -57,20 +63,25 @@ async function addCharacter() {
     }
 }
 
-// ========== 角色管理：查詢所有角色 ==========
+// ========== 角色管理：查詢所有角色 (Firebase完整版，渲染列表) ==========
 async function showAllCharacters() {
     const listBox = document.getElementById('characterList');
     listBox.innerHTML = "<div class='empty-tip'>加載中...</div>";
     try{
-        const query = new AV.Query('Character');
-        const chars = await query.find();
+        if(!window.charRef) {
+            listBox.innerHTML = "<div class='empty-tip'>數據庫加載中，請刷新頁面再試！</div>";
+            return;
+        }
+        const snapshot = await window.charRef.once('value');
+        const charsObj = snapshot.val() || {};
+        const chars = Object.values(charsObj);
+        
         if(chars.length === 0){
             listBox.innerHTML = "<p class='empty-tip'>暫無魔靈角色，請先新增角色！</p>";
             return;
         }
         listBox.innerHTML = "";
-        chars.forEach(char => {
-            const charData = char.toJSON();
+        chars.forEach(charData => {
             let charImgHtml = charData.charImg ? 
                 `<div class="char-img-box"><img src="${charData.charImg}" class="char-img"></div>` :
                 `<div class="char-img-box"><div class="char-no-img">無角色圖片</div></div>`;
@@ -82,8 +93,8 @@ async function showAllCharacters() {
                 <strong>角色：${charData.name}</strong> <br>屬性：${charData.attr} <br>攻略備註：${charData.desc}
                 <div class="code-box">角色專屬CODE：${charData.charCode}</div>
                 <div class="btn-group">
-                    <button class="edit-btn" onclick="editCharacter('${char.id}')">✏️ 修改</button>
-                    <button class="del-btn" onclick="delCharacter('${char.id}')">🗑️ 刪除</button>
+                    <button class="edit-btn" onclick="editCharacter('${charData.id}')">✏️ 修改</button>
+                    <button class="del-btn" onclick="delCharacter('${charData.id}')">🗑️ 刪除</button>
                 </div>
             </div>`;
             listBox.appendChild(charItem);
@@ -93,23 +104,30 @@ async function showAllCharacters() {
     }
 }
 
-// ========== 角色管理：刪除角色 ==========
+// ========== 角色管理：刪除角色 (Firebase完整版) ==========
 async function delCharacter(charId) {
     if(!confirm("⚠️ 確定要刪除這個魔靈角色嗎？刪除後無法復原！")) return;
     try{
-        const char = AV.Object.createWithoutData('Character', charId);
-        await char.destroy();
+        await window.charRef.child(charId).remove();
         showAllCharacters();
     }catch(err){
         alert("刪除失敗："+err.message);
     }
 }
 
-// ========== 角色管理：打開修改彈窗 ==========
+// ========== 角色管理：打開修改彈窗 (Firebase完整版) ==========
 async function editCharacter(charId) {
     try{
-        const char = await AV.Object.createWithoutData('Character', charId).fetch();
-        const charData = char.toJSON();
+        if(!window.charRef) {
+            alert("數據庫加載中，請稍等！");
+            return;
+        }
+        const snapshot = await window.charRef.child(charId).once('value');
+        const charData = snapshot.val();
+        if(!charData) {
+            alert("角色數據不存在！");
+            return;
+        }
         document.getElementById('editId').value = charId;
         document.getElementById('editCharCode').value = charData.charCode;
         document.getElementById('editCharImg').value = charData.charImg || '';
@@ -130,7 +148,7 @@ async function editCharacter(charId) {
     }
 }
 
-// ========== 角色管理：保存修改 ==========
+// ========== 角色管理：保存修改 (Firebase完整版) ==========
 async function saveEdit() {
     const charId = document.getElementById('editId').value;
     const oldCode = document.getElementById('editCharCode').value;
@@ -146,13 +164,13 @@ async function saveEdit() {
             alert(`⚠️ 重複修改！【${editAttr}屬性-${editName}】已存在！`);
             return;
         }
-        const char = AV.Object.createWithoutData('Character', charId);
-        char.set('name', editName);
-        char.set('attr', editAttr);
-        char.set('desc', editDesc || "暫無備註");
-        char.set('charCode', newCode);
-        char.set('charImg', currentEditImgBase64 || oldImg);
-        await char.save();
+        await window.charRef.child(charId).update({
+            name: editName,
+            attr: editAttr,
+            desc: editDesc || "暫無備註",
+            charCode: newCode,
+            charImg: currentEditImgBase64 || oldImg
+        });
         closeModal();
         showAllCharacters();
         alert("✅ 修改成功！角色資料已更新");
@@ -161,7 +179,7 @@ async function saveEdit() {
     }
 }
 
-// ========== 角色管理：關閉修改彈窗 ==========
+// ========== 角色管理：關閉修改彈窗 (不变) ==========
 function closeModal() { 
     document.getElementById('editModal').style.display = "none"; 
     currentEditImgBase64 = '';
