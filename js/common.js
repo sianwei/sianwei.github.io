@@ -1,11 +1,11 @@
 // 全局常量配置
 const allAttrs = ["風", "火", "水", "光", "暗"];
 const attrShortCode = { "風":"wi", "火":"fr", "水":"wa", "光":"li", "暗":"da" };
-// 圖片Base64存儲
+// 圖片Base64存儲变量
 let currentAddImgBase64 = '';
 let currentEditImgBase64 = '';
 
-// ========== 公共方法：圖片預覽 + 轉Base64 ==========
+// ========== 公共方法：圖片預覽 + 轉Base64 (不变，完美复用) ==========
 function previewImg(fileObj, previewId) {
     const file = fileObj.files[0];
     if(!file) return;
@@ -22,29 +22,35 @@ function previewImg(fileObj, previewId) {
     reader.readAsDataURL(file);
 }
 
-// ========== 公共方法：重置圖片預覽框 ==========
+// ========== 公共方法：重置圖片預覽框 (不变) ==========
 function resetImgPreview(previewId) {
     const previewBox = document.getElementById(previewId);
     previewBox.innerHTML = `<div class="char-no-img">點擊下方按鈕<br>上傳角色圖片</div>`;
 }
 
-// ========== 公共方法：生成角色CODE ==========
+// ========== 公共方法：生成角色CODE (不变) ==========
 function generateCharCode(charName, attr) {
     const attrCode = attrShortCode[attr];
     const urlEncodeName = encodeURIComponent(charName);
     return `cr/el/${attrCode}:${urlEncodeName}`;
 }
 
-// ========== 公共方法：生成隊伍CODE ==========
+// ========== 公共方法：生成隊伍CODE (不变) ==========
 function generateTeamCode(teamNum, charCodes) {
     return `${teamNum}ut/lead:(${charCodes.join(';')})`;
 }
 
-// ========== 公共方法：驗證CODE是否存在 (适配Firebase，替换原方法即可) ==========
+// ========== 公共方法：驗證CODE是否存在 (Firebase完整版，修复orderByChild报错，核心！) ==========
 async function checkCodeIsExist(code, type) {
     try{
-        const ref = type === 'character' ? window.charRef : window.teamRef;
-        const snapshot = await ref.orderByChild(type === 'character' ? 'charCode' : 'teamCode').equalTo(code).once('value');
+        // 确保数据库对象已加载，不会undefined
+        if(!window.charRef || !window.teamRef) {
+            alert("数据库加载中，请稍等2秒再操作！");
+            return true;
+        }
+        const dbRef = type === 'character' ? window.charRef : window.teamRef;
+        const codeKey = type === 'character' ? 'charCode' : 'teamCode';
+        const snapshot = await dbRef.orderByChild(codeKey).equalTo(code).once('value');
         return snapshot.exists();
     }catch(err){
         alert("驗證數據失敗："+err.message);
