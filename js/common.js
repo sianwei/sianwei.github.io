@@ -40,7 +40,7 @@ function generateTeamCode(teamNum, charCodes) {
     return `${teamNum}ut/lead:(${charCodes.join(';')})`;
 }
 
-// ========== 公共方法：驗證CODE是否存在 (适配Firebase，替换原方法) ==========
+// ========== 公共方法：驗證CODE是否存在 (适配Firebase，替换原方法即可) ==========
 async function checkCodeIsExist(code, type) {
     try{
         const ref = type === 'character' ? window.charRef : window.teamRef;
