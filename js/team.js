@@ -1,4 +1,4 @@
-// ========== 隊伍管理：動態生成隊伍輸入框 ==========
+// ========== 隊伍管理：動態生成隊伍輸入框 (不变) ==========
 function createTeamInput(num) {
     const container = document.getElementById('teamInputContainer');
     container.innerHTML = '';
@@ -41,7 +41,7 @@ function createTeamInput(num) {
     }
 }
 
-// ========== 隊伍管理：動態生成修改隊伍輸入框 ==========
+// ========== 隊伍管理：動態生成修改隊伍輸入框 (不变) ==========
 function createEditTeamInput(num) {
     const container = document.getElementById('editTeamInputContainer');
     container.innerHTML = '';
@@ -82,7 +82,7 @@ function createEditTeamInput(num) {
     }
 }
 
-// ========== 隊伍管理：智能模糊匹配 ==========
+// ========== 隊伍管理：智能模糊匹配 (Firebase完整版) ==========
 async function searchCharacter(inputObj, idx, type='add') {
     const keyword = inputObj.value.trim();
     const suggestId = type == 'edit' ? `editSuggest${idx}` : `suggest${idx}`;
@@ -93,10 +93,12 @@ async function searchCharacter(inputObj, idx, type='add') {
         return;
     }
     try{
-        const query = new AV.Query('Character');
-        query.contains('name', keyword);
-        const chars = await query.find();
-        const charNames = [...new Set(chars.map(c=>c.toJSON().name))];
+        if(!window.charRef) return;
+        const snapshot = await window.charRef.once('value');
+        const charsObj = snapshot.val() || {};
+        const chars = Object.values(charsObj);
+        const charNames = [...new Set(chars.map(c=>c.name))].filter(n=>n.includes(keyword));
+        
         if(charNames.length === 0){
             suggestBox.innerHTML = `<div class="suggest-empty">無匹配角色</div>`;
             suggestBox.style.display = 'block';
@@ -119,7 +121,7 @@ async function searchCharacter(inputObj, idx, type='add') {
     }
 }
 
-// ========== 隊伍管理：新增隊伍 ==========
+// ========== 隊伍管理：新增隊伍 (Firebase完整版，无LeanCloud代码) ==========
 async function addTeam() {
     const teamNum = document.getElementById('teamNum').value;
     const teamName = document.getElementById('teamName').value.trim();
@@ -154,14 +156,16 @@ async function addTeam() {
             return;
         }
         const teamScene = teamNum ==3 ? "工會戰/占領戰" : (teamNum ==4 ? "競技場" : "RTA/副本");
-        const team = new TeamTable();
-        team.set('teamName', teamName);
-        team.set('teamNum', teamNum);
-        team.set('teamScene', teamScene);
-        team.set('teamChars', teamChars);
-        team.set('teamDesc', teamDesc || "暫無隊伍備註");
-        team.set('teamCode', teamCode);
-        await team.save();
+        const teamId = getUUID();
+        await window.teamRef.child(teamId).set({
+            id: teamId,
+            teamName: teamName,
+            teamNum: teamNum,
+            teamScene: teamScene,
+            teamChars: teamChars,
+            teamDesc: teamDesc || "暫無隊伍備註",
+            teamCode: teamCode
+        });
 
         teamMsg.textContent = "✅ 隊伍登記成功！";
         teamMsg.className = "success";
@@ -175,20 +179,25 @@ async function addTeam() {
     }
 }
 
-// ========== 隊伍管理：查詢所有隊伍 ==========
+// ========== 隊伍管理：查詢所有隊伍 (Firebase完整版) ==========
 async function showAllTeams() {
     const listBox = document.getElementById('teamList');
     listBox.innerHTML = "<div class='empty-tip'>加載中...</div>";
     try{
-        const query = new AV.Query('Team');
-        const teams = await query.find();
+        if(!window.teamRef) {
+            listBox.innerHTML = "<div class='empty-tip'>數據庫加載中，請刷新頁面再試！</div>";
+            return;
+        }
+        const snapshot = await window.teamRef.once('value');
+        const teamsObj = snapshot.val() || {};
+        const teams = Object.values(teamsObj);
+        
         if(teams.length === 0){
             listBox.innerHTML = "<p class='empty-tip'>暫無登記隊伍，請先登記隊伍！</p>";
             return;
         }
         listBox.innerHTML = "";
-        teams.forEach(team => {
-            const teamData = team.toJSON();
+        teams.forEach(teamData => {
             let charList = "";
             teamData.teamChars.forEach((char,index)=>{ charList += `${index+1}. ${char}<br>`; });
             
@@ -202,8 +211,8 @@ async function showAllTeams() {
                 隊伍備註：${teamData.teamDesc} <br>
                 <div class="code-box">隊伍專屬CODE：${teamData.teamCode}</div>
                 <div class="btn-group">
-                    <button class="edit-btn" onclick="editTeam('${team.id}')">✏️ 修改隊伍</button>
-                    <button class="del-btn" onclick="delTeam('${team.id}')">🗑️ 刪除隊伍</button>
+                    <button class="edit-btn" onclick="editTeam('${teamData.id}')">✏️ 修改隊伍</button>
+                    <button class="del-btn" onclick="delTeam('${teamData.id}')">🗑️ 刪除隊伍</button>
                 </div>
             </div>`;
             listBox.appendChild(teamItem);
@@ -213,11 +222,19 @@ async function showAllTeams() {
     }
 }
 
-// ========== 隊伍管理：打開修改彈窗 ==========
+// ========== 隊伍管理：打開修改彈窗 (Firebase完整版) ==========
 async function editTeam(teamId) {
     try{
-        const team = await AV.Object.createWithoutData('Team', teamId).fetch();
-        const teamData = team.toJSON();
+        if(!window.teamRef) {
+            alert("數據庫加載中，請稍等！");
+            return;
+        }
+        const snapshot = await window.teamRef.child(teamId).once('value');
+        const teamData = snapshot.val();
+        if(!teamData) {
+            alert("隊伍數據不存在！");
+            return;
+        }
         document.getElementById('editTeamId').value = teamId;
         document.getElementById('editTeamNum').value = teamData.teamNum;
         document.getElementById('editTeamCode').value = teamData.teamCode;
@@ -240,7 +257,7 @@ async function editTeam(teamId) {
     }
 }
 
-// ========== 隊伍管理：保存隊伍修改 ==========
+// ========== 隊伍管理：保存隊伍修改 (Firebase完整版) ==========
 async function saveTeamEdit() {
     const teamId = document.getElementById('editTeamId').value;
     const oldTeamCode = document.getElementById('editTeamCode').value;
@@ -271,12 +288,12 @@ async function saveTeamEdit() {
             alert(`⚠️ 重複修改！修改後的隊伍組合已存在！`);
             return;
         }
-        const team = AV.Object.createWithoutData('Team', teamId);
-        team.set('teamName', editTeamName);
-        team.set('teamChars', editTeamChars);
-        team.set('teamDesc', editTeamDesc || "暫無隊伍備註");
-        team.set('teamCode', newTeamCode);
-        await team.save();
+        await window.teamRef.child(teamId).update({
+            teamName: editTeamName,
+            teamChars: editTeamChars,
+            teamDesc: editTeamDesc || "暫無隊伍備註",
+            teamCode: newTeamCode
+        });
         closeTeamModal();
         showAllTeams();
         alert("✅ 隊伍修改成功！");
@@ -285,17 +302,16 @@ async function saveTeamEdit() {
     }
 }
 
-// ========== 隊伍管理：關閉修改彈窗 ==========
+// ========== 隊伍管理：關閉修改彈窗 (不变) ==========
 function closeTeamModal() { 
     document.getElementById('editTeamModal').style.display = "none"; 
 }
 
-// ========== 隊伍管理：刪除隊伍 ==========
+// ========== 隊伍管理：刪除隊伍 (Firebase完整版) ==========
 async function delTeam(teamId) {
     if(!confirm("⚠️ 確定要刪除這個隊伍嗎？刪除後無法復原！")) return;
     try{
-        const team = AV.Object.createWithoutData('Team', teamId);
-        await team.destroy();
+        await window.teamRef.child(teamId).remove();
         showAllTeams();
     }catch(err){
         alert("刪除失敗："+err.message);
