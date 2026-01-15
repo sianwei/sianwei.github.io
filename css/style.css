@@ -1,0 +1,337 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 微軟正黑體, Arial, sans-serif;
+}
+body {
+    background-color: #1a1a2e;
+    color: #fff;
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+h1 {
+    color: #e6b800;
+    text-align: center;
+    margin-bottom: 30px;
+    text-shadow: 0 0 15px #ffd700;
+}
+h2 {
+    color: #ffc107;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #666;
+    padding-bottom: 10px;
+}
+h3 {
+    color: #ffdd67;
+    margin:15px 0 10px;
+    font-size:16px;
+}
+/* 首頁樣式 - 4個獨立功能入口 */
+.home-page {
+    text-align: center;
+    margin-top: 50px;
+}
+.home-title {
+    font-size: 32px;
+    margin-bottom: 60px;
+    color: #ffd700;
+    text-shadow: 0 0 20px #e6b800;
+}
+.btn-group-home {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 25px;
+    justify-content: center;
+}
+.home-btn {
+    background-color: #e6b800;
+    color: #1a1a2e;
+    font-weight: bold;
+    font-size: 20px;
+    padding: 25px 20px;
+    border-radius: 10px;
+	border: none;
+    cursor: pointer;
+    transition: 0.3s;
+    min-width: 260px;
+}
+.home-btn:hover {
+    background-color: #ffd700;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #e6b800;
+}
+/* 通用頁面樣式 */
+.page {
+    display: none;
+}
+.container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.card {
+    background-color: #222831;
+    padding: 25px;
+    border-radius: 12px;
+    border: 2px solid #e6b800;
+    flex: 1;
+    min-width: 300px;
+}
+label {
+    display: block;
+    margin: 12px 0 5px;
+    color: #d1d1d1;
+    font-weight: bold;
+}
+input, select, button, textarea {
+    padding: 10px;
+    border-radius: 6px;
+	border: none;
+    font-size: 16px;
+    outline: none;
+}
+input, select, textarea {
+    background-color: #393e46;
+    color: #fff;
+}
+input:focus, select:focus, textarea:focus {
+    border: 2px solid #e6b800;
+}
+.btn-style {
+    background-color: #e6b800;
+    color: #1a1a2e;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: 0.3s;
+    width: 100%;
+}
+.btn-style:hover {
+    background-color: #ffd700;
+    transform: scale(1.02);
+}
+#characterList, #teamList {
+    margin-top: 20px;
+    display: grid;
+    gap: 10px;
+}
+.item-box {
+    background-color: #393e46;
+    padding: 15px;
+    border-radius: 6px;
+	border-left: 4px solid #e6b800;
+    position: relative;
+    display: flex;
+    gap: 12px;
+}
+/* 角色圖片樣式 */
+.char-img-box {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+	border:1px solid #ffc107;
+    background-color: #1a1a2e;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.char-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.char-no-img {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+    line-height: 1.2;
+}
+.char-info {
+    flex: 1;
+}
+/* 專屬CODE樣式 */
+.code-box {
+    font-size: 12px;
+    color: #ffd700;
+    background-color: #1a1a2e;
+	padding: 5px 8px;
+	border-radius: 4px;
+	margin-top: 8px;
+	word-break: break-all;
+	border:1px solid #ffc107;
+}
+.btn-group{
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+.edit-btn {
+    background-color: #17a2b8;
+    color: #fff;
+    padding: 6px 0;
+    font-size: 14px;
+    margin-top: 0;
+    width: 100%;
+}
+.edit-btn:hover {
+    background-color: #31cce6;
+    transform: scale(1);
+}
+.del-btn {
+    background-color: #dc3545;
+    color: #fff;
+    padding: 6px 0;
+    font-size: 14px;
+    margin-top: 0;
+    width: 100%;
+}
+.del-btn:hover {
+    background-color: #e75160;
+    transform: scale(1);
+}
+.empty-tip {
+    color: #999;
+    text-align: center;
+    margin-top: 20px;
+    font-size:15px;
+}
+.success {
+    color: #28a745;
+    margin-top: 10px;
+    font-size: 14px;
+}
+.warn {
+    color: #dc3545;
+    margin-top: 10px;
+    font-size: 14px;
+}
+/* 返回首頁按鈕 */
+.back-btn {
+    background-color: #6c757d;
+    color: #fff;
+    width: auto;
+    padding: 8px 20px;
+    margin: 0 auto 20px;
+    display: block;
+}
+.back-btn:hover {
+    background-color: #869099;
+}
+/* 修改彈窗樣式 通用 */
+.modal {
+    display: none;
+    position: fixed;
+    top:0;left:0;right:0;bottom:0;
+    background: rgba(0,0,0,0.8);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+}
+.modal-box {
+    background: #222831;
+	padding:25px;
+	border-radius:12px;
+	border:2px solid #e6b800;
+	width: 90%;
+	max-width: 500px;
+	max-height: 90vh;
+	overflow-y: auto;
+}
+.modal-box h3 {
+    color: #ffc107;
+    margin-bottom:20px;
+    text-align: center;
+}
+.close-btn{
+    background-color: #6c757d;
+    color:#fff;
+    margin-top:5px;
+    width: 100%;
+}
+.close-btn:hover {
+    background-color: #869099;
+}
+/* 隊伍角色+屬性 一行排版樣式 */
+.team-input-box{ margin-top:10px; }
+.team-item-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    position: relative;
+    width: 100%;
+}
+.team-char-input {
+    flex: 7;
+    margin: 0;
+}
+.team-attr-select {
+    flex: 3;
+    margin: 0;
+}
+/* 備註框樣式 */
+.team-desc {
+    width: 100%;
+    resize: none;
+    min-height: 80px;
+    margin-bottom: 8px;
+}
+/* 智能預覽下拉匹配樣式 */
+.suggest-list {
+    background-color: #393e46;
+    border-radius: 0 0 6px 6px;
+	border:1px solid #e6b800;
+    width: calc(70% - 4px);
+    max-height: 180px;
+    overflow-y:auto;
+    z-index: 99;
+    position:absolute;
+    top: 40px;
+    left: 0;
+}
+.suggest-item {
+    padding:8px 12px;
+    cursor: pointer;
+    font-size:15px;
+    border-bottom:1px solid #444;
+}
+.suggest-item:hover {
+    background-color: #e6b800;
+    color:#1a1a2e;
+}
+.suggest-empty {
+    padding:8px 12px;
+    color:#999;
+    font-size:14px;
+}
+/* 圖片上傳按鈕樣式 */
+.img-upload {
+    display: none;
+}
+.img-upload-btn {
+    background-color: #17a2b8;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 14px;
+    margin-top: 5px;
+}
+.img-upload-btn:hover {
+    background-color: #31cce6;
+}
+.img-preview-box {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+	border:1px solid #ffc107;
+    background-color: #1a1a2e;
+    overflow: hidden;
+    margin: 5px 0;
+}

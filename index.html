@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔靈召喚 - 遊戲攻略管理系統</title>
+    <!-- 引入外部样式文件 -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 主頁面 4個獨立功能入口 -->
+    <div class="home-page" id="homePage">
+        <h1 class="home-title">魔靈召喚 ✦ 遊戲攻略管理系統</h1>
+        <div class="btn-group-home">
+            <button class="home-btn" onclick="goToPage('addCharPage')">✨ 新增魔靈角色</button>
+            <button class="home-btn" onclick="goToPage('charListPage')">📋 查詢角色列表</button>
+            <button class="home-btn" onclick="goToPage('addTeamPage')">⚔️ 新增隊伍登錄</button>
+            <button class="home-btn" onclick="goToPage('teamListPage')">🏆 查詢隊伍列表</button>
+        </div>
+    </div>
+
+    <!-- 頁面1：新增角色頁 -->
+    <div class="page" id="addCharPage">
+        <h1>魔靈召喚 - 新增魔靈角色</h1>
+        <button class="back-btn" onclick="goToPage('homePage')">⬅ 返回首頁</button>
+        <div class="container">
+            <div class="card">
+                <h2>✨ 新增魔靈角色</h2>
+                <label for="charImgUpload">角色圖片上傳 (選填)</label>
+                <div class="img-preview-box" id="addImgPreview">
+                    <div class="char-no-img">點擊下方按鈕<br>上傳角色圖片</div>
+                </div>
+                <input type="file" accept="image/*" id="charImgUpload" class="img-upload" onchange="previewImg(this, 'addImgPreview')">
+                <label for="charImgUpload" class="img-upload-btn">📷 選擇角色圖片</label>
+
+                <label for="charName">角色名稱 (必填)</label>
+                <input type="text" id="charName" placeholder="請輸入魔靈名稱 e.g. 龍、龍騎士" style="width:100%">
+                <label for="charAttr">角色屬性</label>
+                <select id="charAttr" style="width:100%">
+                    <option value="全部">全部</option>
+                    <option value="風">風</option>
+                    <option value="火">火</option>
+                    <option value="水">水</option>
+                    <option value="光">光</option>
+                    <option value="暗">暗</option>
+                </select>
+                <label for="charDesc">角色備註/攻略點</label>
+                <input type="text" id="charDesc" placeholder="請輸入培養重點/技能亮點" style="width:100%">
+                <button class="btn-style" onclick="addCharacter()">✅ 新增角色</button>
+                <div id="msg" class="success"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頁面2：角色列表頁 -->
+    <div class="page" id="charListPage">
+        <h1>魔靈召喚 - 魔靈角色列表</h1>
+        <button class="back-btn" onclick="goToPage('homePage')">⬅ 返回首頁</button>
+        <div class="container">
+            <div class="card">
+                <h2>📋 所有魔靈角色列表</h2>
+                <button class="btn-style" onclick="showAllCharacters()">🔍 刷新查看角色</button>
+                <div id="characterList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頁面3：新增隊伍頁 -->
+    <div class="page" id="addTeamPage">
+        <h1>魔靈召喚 - 新增隊伍登錄</h1>
+        <button class="back-btn" onclick="goToPage('homePage')">⬅ 返回首頁</button>
+        <div class="container">
+            <div class="card">
+                <h2>⚔️ 隊伍登錄/組隊登記</h2>
+                <label for="teamNum">選擇隊伍角色數量</label>
+                <select id="teamNum" onchange="createTeamInput(this.value)" style="width:100%">
+                    <option value="0">請選擇隊伍人數</option>
+                    <option value="3">3個角色 (工會戰/占領戰)</option>
+                    <option value="4">4個角色 (競技場)</option>
+                    <option value="5">5個角色 (RTA/副本)</option>
+                </select>
+                <label for="teamName">隊伍名稱 (必填)</label>
+                <input type="text" id="teamName" placeholder="請輸入隊伍名 e.g. 風暗一波流" style="width:100%">
+                <label for="teamDesc">隊伍備註/攻略重點</label>
+                <textarea id="teamDesc" class="team-desc" placeholder="請輸入隊伍備註 e.g. 先手控場，後期爆發"></textarea>
+                <div id="teamInputContainer" class="team-input-box"></div>
+                <button class="btn-style" onclick="addTeam()">✅ 登記隊伍</button>
+                <div id="teamMsg" class="success"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頁面4：隊伍列表頁 -->
+    <div class="page" id="teamListPage">
+        <h1>魔靈召喚 - 登記隊伍列表</h1>
+        <button class="back-btn" onclick="goToPage('homePage')">⬅ 返回首頁</button>
+        <div class="container">
+            <div class="card">
+                <h2>🏆 所有登記隊伍列表</h2>
+                <button class="btn-style" onclick="showAllTeams()">🔍 刷新查看隊伍</button>
+                <div id="teamList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改角色彈窗 -->
+    <div class="modal" id="editModal">
+        <div class="modal-box">
+            <h3>✏️ 修改魔靈資料</h3>
+            <input type="hidden" id="editId">
+            <input type="hidden" id="editCharCode">
+            <input type="hidden" id="editCharImg">
+            <label for="editCharImgUpload">角色圖片更換 (選填)</label>
+            <div class="img-preview-box" id="editImgPreview">
+                <div class="char-no-img">當前無圖片<br>可點擊更換</div>
+            </div>
+            <input type="file" accept="image/*" id="editCharImgUpload" class="img-upload" onchange="previewImg(this, 'editImgPreview')">
+            <label for="editCharImgUpload" class="img-upload-btn">📷 更換角色圖片</label>
+
+            <label for="editName">角色名稱 (必填)</label>
+            <input type="text" id="editName" placeholder="請輸入魔靈名稱" style="width:100%">
+            <label for="editAttr">角色屬性</label>
+            <select id="editAttr" style="width:100%">
+                <option value="風">風</option><option value="火">火</option><option value="水">水</option><option value="光">光</option><option value="暗">暗</option>
+            </select>
+            <label for="editDesc">角色備註/攻略點</label>
+            <input type="text" id="editDesc" placeholder="請輸入培養重點/技能亮點" style="width:100%">
+            <button class="btn-style" onclick="saveEdit()">💾 保存修改</button>
+            <button class="close-btn" onclick="closeModal()">❌ 取消關閉</button>
+        </div>
+    </div>
+
+    <!-- 修改隊伍彈窗 -->
+    <div class="modal" id="editTeamModal">
+        <div class="modal-box">
+            <h3>✏️ 修改隊伍資料</h3>
+            <input type="hidden" id="editTeamId">
+            <input type="hidden" id="editTeamNum">
+            <input type="hidden" id="editTeamCode">
+            <label for="editTeamName">隊伍名稱 (必填)</label>
+            <input type="text" id="editTeamName" placeholder="請輸入隊伍名 e.g. 風暗一波流" style="width:100%">
+            <label for="editTeamDesc">隊伍備註/攻略重點</label>
+            <textarea id="editTeamDesc" class="team-desc" placeholder="請輸入隊伍備註 e.g. 先手控場，後期爆發"></textarea>
+            <div id="editTeamInputContainer" class="team-input-box"></div>
+            <button class="btn-style" onclick="saveTeamEdit()">💾 保存隊伍修改</button>
+            <button class="close-btn" onclick="closeTeamModal()">❌ 取消關閉</button>
+        </div>
+    </div>
+
+    <!-- 引入外部脚本文件，按依赖顺序引入，缺一不可 -->
+    <script src="js/leancloud.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/character.js"></script>
+    <script src="js/team.js"></script>
+    <script src="js/index.js"></script>
+</body>
+</html>
